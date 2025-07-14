@@ -29,13 +29,22 @@
     <div class="container">
       <h1>{{ message }}</h1>
       <form id="emailForm">
-        <input
-          type="email"
-          id="to"
-          placeholder="Recipient Email"
-          required
-          style="width: 100%; padding: 10px; margin: 10px 0"
-        /><br />
+        <div id="recipients-list">
+          <input
+            type="email"
+            class="recipient"
+            placeholder="Recipient Email"
+            required
+            style="width: 90%; padding: 10px; margin: 10px 0"
+          />
+        </div>
+        <button
+          type="button"
+          id="addRecipient"
+          style="padding: 5px 15px; margin-bottom: 10px"
+        >
+          +</button
+        ><br />
         <input
           type="text"
           id="subject"
@@ -56,10 +65,22 @@
     </div>
     <script>
       document
+        .getElementById("addRecipient")
+        .addEventListener("click", function () {
+          const div = document.createElement("div");
+          div.innerHTML =
+            '<input type="email" class="recipient" placeholder="Recipient Email" required style="width:90%;padding:10px;margin:10px 0;"/>';
+          document.getElementById("recipients-list").appendChild(div);
+        });
+      document
         .getElementById("emailForm")
         .addEventListener("submit", async function (e) {
           e.preventDefault();
-          const to = document.getElementById("to").value;
+          const recipientInputs = document.querySelectorAll(".recipient");
+          const recipients = Array.from(recipientInputs)
+            .map((input) => input.value)
+            .filter(Boolean)
+            .join(",");
           const subject = document.getElementById("subject").value;
           const message = document.getElementById("message").value;
           const resultDiv = document.getElementById("result");
@@ -68,7 +89,7 @@
             const res = await fetch("/send-email", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ to, subject, message }),
+              body: JSON.stringify({ recipients, subject, message }),
             });
             const data = await res.json();
             if (data.status === "success") {

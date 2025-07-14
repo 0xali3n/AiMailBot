@@ -5,8 +5,10 @@ This is a simple Flask application that displays a welcome message and allows yo
 ## Features
 
 - Welcome homepage
-- Email sending form (recipient, subject, message)
-- Uses Mailgun API (API key loaded from .env)
+- Email sending form with multiple recipient fields (add as many as you want)
+- Each recipient receives their own individual email (no one sees other recipients)
+- Uses Mailgun API (API key and domain loaded from .env)
+- Shows per-recipient send results
 
 ## Setup Instructions
 
@@ -27,10 +29,11 @@ This is a simple Flask application that displays a welcome message and allows yo
 
 3. **Create a `.env` file in the `Mailbot` directory:**
 
-   Add your Mailgun API key:
+   Add your Mailgun API key and domain:
 
    ```
    API_KEY=your-mailgun-api-key
+   MAILGUN_DOMAIN=yourdomain.com
    ```
 
 4. **Run the application:**
@@ -45,14 +48,16 @@ This is a simple Flask application that displays a welcome message and allows yo
 
 ## Usage
 
-- Fill in the recipient email, subject, and message in the form.
+- Add as many recipient email fields as you need using the "+" button.
+- Fill in the subject and message.
 - Click "Send Email".
-- You will see a success or error message below the form.
+- Each recipient will receive their own email (not as CC/BCC).
+- You will see a summary of which emails succeeded or failed below the form.
 
 ## Notes
 
-- The Mailgun API key is loaded from the `.env` file (never commit your real `.env` to GitHub).
-- The sender is set as `Mailgun Sandbox <postmaster@imgnft.fun>` by default. You can change this in `app.py` if needed.
+- The Mailgun API key and domain are loaded from the `.env` file (never commit your real `.env` to GitHub).
+- The sender is set as `Mailgun Sandbox <postmaster@yourdomain.com>` by default. You can change this in `app.py` if needed.
 - This is a development server. For production, use a WSGI server like Gunicorn or uWSGI.
 
 ---
