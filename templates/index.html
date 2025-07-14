@@ -29,6 +29,26 @@
     <div class="container">
       <h1>{{ message }}</h1>
       <form id="emailForm">
+        <div style="text-align: left; margin-bottom: 15px">
+          <label for="fromAddresses"><b>From Addresses:</b></label
+          ><br />
+          <select
+            id="fromAddresses"
+            multiple
+            style="width: 100%; padding: 10px; margin: 10px 0"
+          >
+            <option value="Name1 <cox1@imgnft.fun>">
+              Name1 &lt;cox1@imgnft.fun&gt;
+            </option>
+            <option value="Name2 <cox2@imgnft.fun>">
+              Name2 &lt;cox2@imgnft.fun&gt;
+            </option>
+            <option value="Name3 <cox3@imgnft.fun>">
+              Name3 &lt;cox3@imgnft.fun&gt;
+            </option>
+          </select>
+          <small>Hold Ctrl (Windows) or Cmd (Mac) to select multiple.</small>
+        </div>
         <div id="recipients-list">
           <input
             type="email"
@@ -61,9 +81,50 @@
         ><br />
         <button type="submit" style="padding: 10px 30px">Send Email</button>
       </form>
+      <div id="summary" style="margin: 20px 0; text-align: left"></div>
       <div id="result" style="margin-top: 20px"></div>
     </div>
     <script>
+      function getSelectedFromAddresses() {
+        const select = document.getElementById("fromAddresses");
+        return Array.from(select.selectedOptions).map((opt) => opt.value);
+      }
+      function getRecipients() {
+        const recipientInputs = document.querySelectorAll(".recipient");
+        return Array.from(recipientInputs)
+          .map((input) => input.value)
+          .filter(Boolean);
+      }
+      function computeAssignments(fromAddresses, recipients) {
+        // Distribute recipients among fromAddresses, no overlap
+        const assignments = {};
+        fromAddresses.forEach((addr) => (assignments[addr] = []));
+        recipients.forEach((recipient, idx) => {
+          const from = fromAddresses[idx % fromAddresses.length];
+          assignments[from].push(recipient);
+        });
+        return assignments;
+      }
+      function showSummary() {
+        const fromAddresses = getSelectedFromAddresses();
+        const recipients = getRecipients();
+        const summaryDiv = document.getElementById("summary");
+        if (fromAddresses.length === 0 || recipients.length === 0) {
+          summaryDiv.innerHTML = "";
+          return;
+        }
+        const assignments = computeAssignments(fromAddresses, recipients);
+        let html = "<b>Distribution Preview:</b><ul>";
+        for (const from in assignments) {
+          html += `<li><b>${from}</b> will send to: <ul>`;
+          assignments[from].forEach((r) => {
+            html += `<li>${r}</li>`;
+          });
+          html += "</ul></li>";
+        }
+        html += "</ul>";
+        summaryDiv.innerHTML = html;
+      }
       document
         .getElementById("addRecipient")
         .addEventListener("click", function () {
@@ -71,16 +132,20 @@
           div.innerHTML =
             '<input type="email" class="recipient" placeholder="Recipient Email" required style="width:90%;padding:10px;margin:10px 0;"/>';
           document.getElementById("recipients-list").appendChild(div);
+          showSummary();
         });
+      document
+        .getElementById("recipients-list")
+        .addEventListener("input", showSummary);
+      document
+        .getElementById("fromAddresses")
+        .addEventListener("change", showSummary);
       document
         .getElementById("emailForm")
         .addEventListener("submit", async function (e) {
           e.preventDefault();
-          const recipientInputs = document.querySelectorAll(".recipient");
-          const recipients = Array.from(recipientInputs)
-            .map((input) => input.value)
-            .filter(Boolean)
-            .join(",");
+          const fromAddresses = getSelectedFromAddresses();
+          const recipients = getRecipients();
           const subject = document.getElementById("subject").value;
           const message = document.getElementById("message").value;
           const resultDiv = document.getElementById("result");
@@ -89,20 +154,29 @@
             const res = await fetch("/send-email", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ recipients, subject, message }),
+              body: JSON.stringify({
+                from_addresses: fromAddresses,
+                recipients,
+                subject,
+                message,
+              }),
             });
             const data = await res.json();
             if (data.status === "success") {
               resultDiv.style.color = "green";
+              resultDiv.textContent = "All emails sent successfully!";
             } else {
               resultDiv.style.color = "red";
+              resultDiv.textContent =
+                data.message || "Some emails failed to send.";
             }
-            resultDiv.textContent = data.message;
           } catch (err) {
             resultDiv.style.color = "red";
             resultDiv.textContent = "Error sending email.";
           }
         });
+      // Initial summary
+      showSummary();
     </script>
   </body>
 </html>
