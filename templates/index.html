@@ -28,6 +28,60 @@
   <body>
     <div class="container">
       <h1>{{ message }}</h1>
+      <form id="emailForm">
+        <input
+          type="email"
+          id="to"
+          placeholder="Recipient Email"
+          required
+          style="width: 100%; padding: 10px; margin: 10px 0"
+        /><br />
+        <input
+          type="text"
+          id="subject"
+          placeholder="Subject"
+          required
+          style="width: 100%; padding: 10px; margin: 10px 0"
+        /><br />
+        <textarea
+          id="message"
+          placeholder="Message"
+          required
+          style="width: 100%; padding: 10px; margin: 10px 0; min-height: 100px"
+        ></textarea
+        ><br />
+        <button type="submit" style="padding: 10px 30px">Send Email</button>
+      </form>
+      <div id="result" style="margin-top: 20px"></div>
     </div>
+    <script>
+      document
+        .getElementById("emailForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const to = document.getElementById("to").value;
+          const subject = document.getElementById("subject").value;
+          const message = document.getElementById("message").value;
+          const resultDiv = document.getElementById("result");
+          resultDiv.textContent = "Sending...";
+          try {
+            const res = await fetch("/send-email", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ to, subject, message }),
+            });
+            const data = await res.json();
+            if (data.status === "success") {
+              resultDiv.style.color = "green";
+            } else {
+              resultDiv.style.color = "red";
+            }
+            resultDiv.textContent = data.message;
+          } catch (err) {
+            resultDiv.style.color = "red";
+            resultDiv.textContent = "Error sending email.";
+          }
+        });
+    </script>
   </body>
 </html>
