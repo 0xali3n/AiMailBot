@@ -84,4 +84,4 @@ Name3 <cox3@imgnft.fun>
 
 ---
 
-**Happy Emailing!**
+**Happy Emailing 😄!**
